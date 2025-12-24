@@ -7,10 +7,11 @@ TZ: str = os.getenv("TZ", "Europe/Madrid")
 
 
 class OCTOPUS:
-    GRAPHQL_URL = os.getenv(
+    GRAPHQL_URL: str = os.getenv(
         "OCTOPUS_GRAPHQL_URL", "https://octopusenergy.es/api/graphql/kraken"
     )
-    PROPERTY_ID = os.getenv("OCTOPUS_PROPERTY_ID", "629606")
+    PROPERTY_ID: str = os.getenv("OCTOPUS_PROPERTY_ID", "629606")
+    ACCOUNT_ID: str = os.getenv("ACCOUNT_ID", "A-0B377DCE")
     TOKEN_MUTATION = """
     mutation obtainKrakenToken($input: ObtainJSONWebTokenInput!) {
         obtainKrakenToken(input: $input) {
@@ -27,6 +28,27 @@ class OCTOPUS:
                     number
                 }
             }
+        }
+    }
+    """
+
+    ACCOUNT_INFO_QUERY = """
+    query ($account: String!) {
+        accountBillingInfo(accountNumber: $account) {
+        ledgers {
+            ledgerType
+            statementsWithDetails(first: 1) {
+            edges {
+                node {
+                amount
+                consumptionStartDate
+                consumptionEndDate
+                issuedDate
+                }
+            }
+            }
+            balance
+        }
         }
     }
     """

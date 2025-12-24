@@ -3,7 +3,7 @@ from typing import Dict, List
 
 from python_graphql_client import GraphqlClient
 import constants
-import api.influx as influx_api
+
 
 
 class OctopusAPI:
@@ -61,7 +61,7 @@ class OctopusAPI:
                         }
                     }
                 ],
-                "timezone": "Europe/Madrid",
+                "timezone": constants.TZ,
                 "startAt": start,
                 "endAt": end,
             },
@@ -73,23 +73,23 @@ class OctopusAPI:
         
         return response["data"]["property"]["measurements"]["edges"]
     
-    async def add_data(self, since: str, until: str):
-        
-        nodes: List[Dict] = await self.get_consumption_per_hour(since, until)
-        points: List = list()
-        for node in nodes:
-            real_node: Dict = node["node"]
-            points.append(
-                influx_api.wrap_point(
-                    "consumption",
-                    tags={"unit": "kwh"},
-                    fields={
-                        "consumption": float(real_node["value"]),
-                        "power": constants.BILLED_POWER,
-                    },
-                    time=real_node["startAt"],
-                )
-            )
-            # print(real_node["startAt"], real_node["value"])
+    async def get_account_info(self, account: str):
+        if not self._token:
+            await self.login()
 
-        influx_api.write(points)
+        client = GraphqlClient(
+            endpoint=constants.OCTOPUS.GRAPHQL_URL, headers={"authorization": self._token}
+        )
+
+        response = await client.execute_async(
+            constants.OCTOPUS.ACCOUNT_INFO_QUERY,
+            {
+                "account": account,
+            },
+            "accountBillingInfo"
+        )
+
+        if "errors" in response:
+            return response["errors"]
+        
+        print(response)
