@@ -1,16 +1,8 @@
-import asyncio
-from typing import Dict, List
 import asyncclick as click
+import pendulum
 
+import constants
 from api.octopus import OctopusAPI
-from api.influx import InfluxAPI
-
-
-async def run_app():
-    # api: OctopusAPI = OctopusAPI()
-    # accounts = await api.get_accounts()
-
-    pass
 
 
 @click.group()
@@ -19,8 +11,15 @@ def octopus():
 
 
 @click.command()
-def run():
-    asyncio.run(run_app())
+async def run():
+    now: pendulum.DateTime = pendulum.today(constants.TZ)
+    five_d: pendulum.DateTime = now.subtract(days=5)
+    four_d: pendulum.DateTime = now.subtract(days=4)
+    # print(five_d.to_iso8601_string(), four_d.to_iso8601_string())
+    
+    print(f"adding data since {five_d.to_iso8601_string()} until {four_d.to_iso8601_string()}")
+    octopus_api: OctopusAPI = OctopusAPI()
+    await octopus_api.add_data(five_d.to_iso8601_string(), four_d.to_iso8601_string())
 
 
 @click.command()
@@ -28,25 +27,9 @@ def run():
 @click.option("--until", help="date until to fetch data")
 async def add_data(since: str, until: str):
     print(f"adding data since {since} until {until}")
-
-    # "2025-12-18T00:00:00+01:00", "2025-12-19T00:00:00+01:00"
     octopus_api: OctopusAPI = OctopusAPI()
-    influx_api: InfluxAPI = InfluxAPI()
-    nodes: List[Dict] = await octopus_api.get_consumption_per_day(since, until)
-    points: List = list()
-    for node in nodes:
-        real_node: Dict = node["node"]
-        points.append(
-            influx_api.wrap_point(
-                "consumption",
-                tags={"unit": "kwh"},
-                fields={"kwh": float(real_node["value"])},
-                time=real_node["startAt"],
-            )
-        )
-        # print(real_node["startAt"], real_node["value"])
-
-    influx_api.write(points)
+    await octopus_api.add_data(since, until)
+    # "2025-12-18T00:00:00+01:00", "2025-12-19T00:00:00+01:00"
 
 
 octopus.add_command(run)

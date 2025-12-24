@@ -1,6 +1,9 @@
-__all__ = ["OCTOPUS", "INFLUX"]
+__all__ = ["OCTOPUS", "INFLUX", "TZ", "BILLED_POWER"]
 
 import os
+
+BILLED_POWER: float = float(os.getenv("BILLED_POWER", "3.5"))
+TZ: str = os.getenv("TZ", "Europe/Madrid")
 
 
 class OCTOPUS:

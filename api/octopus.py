@@ -3,6 +3,7 @@ from typing import Dict, List
 
 from python_graphql_client import GraphqlClient
 import constants
+import api.influx as influx_api
 
 
 class OctopusAPI:
@@ -40,7 +41,7 @@ class OctopusAPI:
 
         return response["data"]["viewer"]["accounts"]
 
-    async def get_consumption_per_day(self, start: str, end: str) -> List[Dict]:
+    async def get_consumption_per_hour(self, start: str, end: str) -> List[Dict]:
         if not self._token:
             await self.login()
 
@@ -51,7 +52,7 @@ class OctopusAPI:
             constants.OCTOPUS.CONSUMPTION_QUERY,
             {
                 "propertyId": constants.OCTOPUS.PROPERTY_ID,
-                "first": 100,
+                "first": 500,
                 "utilityFilters": [
                     {
                         "electricityFilters": {
@@ -71,3 +72,24 @@ class OctopusAPI:
             return response["errors"]
         
         return response["data"]["property"]["measurements"]["edges"]
+    
+    async def add_data(self, since: str, until: str):
+        
+        nodes: List[Dict] = await self.get_consumption_per_hour(since, until)
+        points: List = list()
+        for node in nodes:
+            real_node: Dict = node["node"]
+            points.append(
+                influx_api.wrap_point(
+                    "consumption",
+                    tags={"unit": "kwh"},
+                    fields={
+                        "consumption": float(real_node["value"]),
+                        "power": constants.BILLED_POWER,
+                    },
+                    time=real_node["startAt"],
+                )
+            )
+            # print(real_node["startAt"], real_node["value"])
+
+        influx_api.write(points)
