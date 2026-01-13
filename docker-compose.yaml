@@ -35,6 +35,27 @@ services:
     networks:
       - grafana
 
+  octopus-tracker:
+    build: .
+    container_name: octopus-tracker
+    depends_on:
+      - influxdb
+    environment:
+      - OCTOPUS_USER=${OCTOPUS_USER}
+      - OCTOPUS_PASS=${OCTOPUS_PASS}
+      - OCTOPUS_PROPERTY_ID=${OCTOPUS_PROPERTY_ID}
+      - ACCOUNT_ID=${ACCOUNT_ID}
+      - INFLUX_HOST=http://influxdb:8181
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - INFLUX_DB=${INFLUX_DB:-octopus}
+      - LOAD_FREQUENCY_HOURS=${LOAD_FREQUENCY_HOURS:-6}
+      - DAYS_OFFSET_LOAD=${DAYS_OFFSET_LOAD:-0}
+      - BILLED_POWER=${BILLED_POWER:-3.5}
+      - TZ=${TZ:-Europe/Madrid}
+    restart: unless-stopped
+    networks:
+      - grafana
+
 networks:
   grafana:
     external: true

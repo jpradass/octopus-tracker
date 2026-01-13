@@ -88,3 +88,28 @@ async def query(
         host=host, token=token, database=database, write_client_options=wco
     ) as client:
         return await client.query_async(query, language, database=database)
+
+
+async def get_existing_timestamps(
+    measurement: str, start: datetime, end: datetime
+) -> List[datetime]:
+    """
+    Queries InfluxDB for existing timestamps in the given range for a measurement.
+    """
+    q = f"""
+    SELECT time 
+    FROM "{measurement}" 
+    WHERE time >= '{start.isoformat()}' AND time <= '{end.isoformat()}'
+    """
+    
+    try:
+        # result is a pyarrow.Table
+        result = await query(q, database)
+        if result and result.num_rows > 0:
+            # Convert to list of python datetime objects
+            # InfluxDB v3 python client returns pyarrow table
+            return result.column("time").to_pylist()
+        return []
+    except Exception as e:
+        print(f"Error querying existing timestamps: {e}")
+        return []
