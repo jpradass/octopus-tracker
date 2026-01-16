@@ -4,6 +4,10 @@ import os
 
 BILLED_POWER: float = float(os.getenv("BILLED_POWER", "3.5"))
 TZ: str = os.getenv("TZ", "Europe/Madrid")
+SUN_HOURS_START: str = os.getenv("SUN_HOURS_START", "12:00")
+SUN_HOURS_END: str = os.getenv("SUN_HOURS_END", "18:00")
+POWER_PEAK_START: str = os.getenv("POWER_PEAK_START", "08:00")
+POWER_PEAK_END: str = os.getenv("POWER_PEAK_END", "00:00")
 
 
 class OCTOPUS:

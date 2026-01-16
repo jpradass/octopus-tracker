@@ -1,8 +1,11 @@
 import os
+import logging
 from typing import Dict, List
 
 from python_graphql_client import GraphqlClient
 import constants
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -23,9 +26,11 @@ class OctopusAPI:
         )
 
         if "errors" in response:
+            logger.error(f"Login errors: {response['errors']}")
             print("there was some errors", response["errors"])
 
         self._token = response["data"]["obtainKrakenToken"]["token"]
+        logger.info("Successfully obtained Kraken token")
 
     async def get_accounts(self):
         if not self._token:
@@ -48,6 +53,7 @@ class OctopusAPI:
         client = GraphqlClient(
             endpoint=constants.OCTOPUS.GRAPHQL_URL, headers={"authorization": self._token}
         )
+        logger.info(f"Requesting consumption from {start} to {end}")
         response = await client.execute_async(
             constants.OCTOPUS.CONSUMPTION_QUERY,
             {
@@ -90,6 +96,8 @@ class OctopusAPI:
         )
 
         if "errors" in response:
+            logger.error(f"Error getting account info: {response['errors']}")
             return response["errors"]
         
-        print(response)
+        logger.info(f"Got account info: {response}")
+        # print(response)

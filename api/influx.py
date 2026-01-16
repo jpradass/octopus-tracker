@@ -1,5 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List
+import json
+import requests
 
 from influxdb_client_3 import (
     InfluxDBClient3,
@@ -90,6 +92,34 @@ async def query(
         return await client.query_async(query, language, database=database)
 
 
+def create_db_if_not_exists() -> None:
+    """
+    Creates the InfluxDB database if it does not exist.
+    """
+    url = f"{host}/api/v3/configure/database"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    data = json.dumps({"name": database})
+
+    try:
+        response = requests.post(url, headers=headers, data=data, timeout=10)
+        if response.status_code == 201:
+            print(f"Successfully created database '{database}'")
+        elif response.status_code == 409:
+            # 409 Conflict likely means it already exists, which is fine
+            print(f"Database '{database}' already exists or conflict occurred: {response.text}")
+        elif response.status_code == 422:
+             # 422 Unprocessable Entity - might mean it already exists in some versions or invalid name
+             print(f"Database creation returned 422 (likely already exists): {response.text}")
+        else:
+            print(f"Failed to create database '{database}': {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error attempting to create database '{database}': {e}")
+
+
+
 async def get_existing_timestamps(
     measurement: str, start: datetime, end: datetime
 ) -> List[datetime]:
@@ -113,3 +143,25 @@ async def get_existing_timestamps(
     except Exception as e:
         print(f"Error querying existing timestamps: {e}")
         return []
+
+
+def delete_db() -> None:
+    """
+    Deletes the InfluxDB database.
+    """
+    url = f"{host}/api/v3/configure/database/{database}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.delete(url, headers=headers, timeout=10)
+        if response.status_code == 204:
+            print(f"Successfully deleted database '{database}'")
+        elif response.status_code == 404:
+            print(f"Database '{database}' not found (already deleted?)")
+        else:
+            print(f"Failed to delete database '{database}': {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error attempting to delete database '{database}': {e}")

@@ -1,16 +1,18 @@
+version: '3.8'
+
+
+
 services:
-  grafana:
-    image: grafana/grafana:latest
-    depends_on:
-      - influxdb
-    ports:
-      - 3000:3000
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-grafana}
-    restart: unless-stopped
-    networks:
-      - grafana
+  influxdb-init:
+      image: alpine:latest
+      container_name: influxdb-init
+      # Ejecutamos como root para poder cambiar el dueño
+      user: root
+      # Cambiamos el dueño de la carpeta al usuario 1000 (influxdb)
+      command: sh -c "chmod -R 777 /var/lib/influxdb3/data /var/lib/influxdb3/plugins && echo '✅ Permisos 777 aplicados'"
+      volumes:
+        - influx_data:/var/lib/influxdb3/data
+        - influx_plugins:/var/lib/influxdb3/plugins
 
   influxdb:
     image: influxdb:3-core
@@ -23,20 +25,28 @@ services:
       - --data-dir=/var/lib/influxdb3/data
       - --plugin-dir=/var/lib/influxdb3/plugins
     ports:
-      - 8181:8181
+      - "9080:8181"
     volumes:
-      - type: bind
-        source: ~/.influxdb3/core/data
-        target: /var/lib/influxdb3/data
-      - type: bind
-        source: ~/.influxdb3/core/plugins
-        target: /var/lib/influxdb3/plugins
+      - influx_data:/var/lib/influxdb3/data
+      - influx_plugins:/var/lib/influxdb3/plugins
     restart: unless-stopped
-    networks:
-      - grafana
+    depends_on:
+      influxdb-init:
+        condition: service_completed_successfully
+
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
 
   octopus-tracker:
-    build: .
+    image: octopus-tracker:1.0.12
+    pull_policy: never
     container_name: octopus-tracker
     depends_on:
       - influxdb
@@ -49,13 +59,13 @@ services:
       - INFLUX_TOKEN=${INFLUX_TOKEN}
       - INFLUX_DB=${INFLUX_DB:-octopus}
       - LOAD_FREQUENCY_HOURS=${LOAD_FREQUENCY_HOURS:-6}
-      - DAYS_OFFSET_LOAD=${DAYS_OFFSET_LOAD:-0}
-      - BILLED_POWER=${BILLED_POWER:-3.5}
+      - DAYS_OFFSET_LOAD=${DAYS_OFFSET_LOAD:-16}
+      - BILLED_POWER=${BILLED_POWER:-4.4}
       - TZ=${TZ:-Europe/Madrid}
+      - RESET_DB_ON_STARTUP=false
     restart: unless-stopped
-    networks:
-      - grafana
 
-networks:
-  grafana:
-    external: true
+volumes:
+  grafana_data:
+  influx_data:
+  influx_plugins:
