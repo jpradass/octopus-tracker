@@ -102,7 +102,8 @@ async def serve():
         await asyncio.sleep(load_frequency_hours * 3600)
         
         now = pendulum.now(constants.TZ)
-        start_time = now.subtract(hours=load_frequency_hours + 1)
+        # Always fetch the last 5 days data to account for delays (Octopus data often 3-4 days behind)
+        start_time = now.subtract(days=5)
         logger.info(f"Waking up. Fetching data from {start_time}")
         try:
             await fetch_and_write(start_time.to_iso8601_string(), now.to_iso8601_string())
