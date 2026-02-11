@@ -4,6 +4,7 @@ import asyncclick as click
 import pendulum
 
 import api.influx as influx_api
+import api.influxv2 as influx_apiv2
 import constants
 from api.octopus import OctopusAPI
 
@@ -65,6 +66,15 @@ async def convert_nodes(nodes: List[Dict]) -> List:
         real_node: Dict = node["node"]
         points.append(
             influx_api.wrap_point(
+                "consumption",
+                tags={"unit": "kwh"},
+                fields={
+                    "consumption": float(real_node["value"]),
+                    "power": constants.BILLED_POWER,
+                },
+                time=real_node["startAt"],
+            ) if constants.INFLUX.VERSION == "3" else
+            influx_apiv2.wrap_point(
                 "consumption",
                 tags={"unit": "kwh"},
                 fields={

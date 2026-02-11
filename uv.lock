@@ -266,6 +266,21 @@ wheels = [
 ]
 
 [[package]]
+name = "influxdb-client"
+version = "1.50.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "python-dateutil" },
+    { name = "reactivex" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/07/23/77a945465a556a8067917ba84bac04e312cee2a4fe03d41198fe79ed9c84/influxdb_client-1.50.0.tar.gz", hash = "sha256:c2a4906573097103fa6f9a2ab08efe2eb48c2fed60b8129a3e320affde445743", size = 386749, upload-time = "2026-01-23T09:39:39.322Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7f/ec/6b120b4a86f6fadc7ddb1d7c7cdcb15bcfb332deb022ab60df51bcd4494c/influxdb_client-1.50.0-py3-none-any.whl", hash = "sha256:f172975cf7f0c95bfe74f288b31273393b164d2c58a948de55497d9956ab49be", size = 746289, upload-time = "2026-01-23T09:39:37.377Z" },
+]
+
+[[package]]
 name = "influxdb3-python"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -369,6 +384,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "asyncclick" },
     { name = "better-exceptions" },
+    { name = "influxdb-client" },
     { name = "influxdb3-python" },
     { name = "pendulum" },
     { name = "python-graphql-client" },
@@ -378,6 +394,7 @@ dependencies = [
 requires-dist = [
     { name = "asyncclick", specifier = ">=8.3.0.7" },
     { name = "better-exceptions", specifier = ">=0.3.3" },
+    { name = "influxdb-client", specifier = ">=1.50.0" },
     { name = "influxdb3-python", specifier = ">=0.16.0" },
     { name = "pendulum", specifier = ">=3.1.0" },
     { name = "python-graphql-client", specifier = ">=0.4.3" },

@@ -2,7 +2,7 @@ __all__ = ["OCTOPUS", "INFLUX", "TZ", "BILLED_POWER"]
 
 import os
 
-BILLED_POWER: float = float(os.getenv("BILLED_POWER", "3.5"))
+BILLED_POWER: float = float(os.getenv("BILLED_POWER", "5.5"))
 TZ: str = os.getenv("TZ", "Europe/Madrid")
 
 
@@ -110,6 +110,7 @@ class OCTOPUS:
 
 
 class INFLUX:
-    HOST = os.getenv("INFLUX_HOST", "http://localhost:8181")
-    TOKEN = os.getenv("INFLUX_TOKEN")
-    DB = os.getenv("INFLUX_DB", "octopus")
+    HOST: str | None = os.getenv("INFLUX_HOST", "http://localhost:8181")
+    TOKEN: str | None = os.getenv("INFLUX_TOKEN")
+    DB: str | None = os.getenv("INFLUX_DB", "octopus")
+    VERSION: str | None = os.getenv("INFLUX_VERSION", "2")
